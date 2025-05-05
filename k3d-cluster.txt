@@ -1,0 +1,37 @@
+# para criar um cluster no k3d usamos o comando:
+    k3d cluster create
+
+    para criar um cluster sem LOADBALANCER
+        k3d cluster create <nome do cluster> --no-lb
+
+# para validar:
+    kubectl cluster-info
+
+# para listar os nodes
+    kubectl get nodes
+        k3d-meucluster-agent-0    Ready    <none>                      2m12s   v1.31.5+k3s1
+        k3d-meucluster-agent-1    Ready    <none>                      2m11s   v1.31.5+k3s1
+        k3d-meucluster-agent-2    Ready    <none>                      2m12s   v1.31.5+k3s1
+        k3d-meucluster-server-0   Ready    control-plane,etcd,master   2m51s   v1.31.5+k3s1
+        k3d-meucluster-server-1   Ready    control-plane,etcd,master   2m38s   v1.31.5+k3s1
+        k3d-meucluster-server-2   Ready    control-plane,etcd,master   2m18s   v1.31.5+k3s1
+
+# listar container
+    docker container ls
+        CONTAINER ID   IMAGE                            COMMAND                  CREATED         STATUS         PORTS                             NAMES
+            58838b7f0a97   ghcr.io/k3d-io/k3d-tools:5.8.3   "/app/k3d-tools noop"    6 minutes ago   Up 6 minutes                                     k3d-k3s-default-tools
+            78dd9b85ccb3   ghcr.io/k3d-io/k3d-proxy:5.8.3   "/bin/sh -c nginx-pr…"   6 minutes ago   Up 6 minutes   80/tcp, 0.0.0.0:37181->6443/tcp   k3d-k3s-default-serverlb
+            46a804091987   rancher/k3s:v1.31.5-k3s1         "/bin/k3d-entrypoint…"   6 minutes ago   Up 6 minutes                                     k3d-k3s-default-server-0
+
+# listar elemento do cluster
+    k3d cluster list
+        NAME          SERVERS   AGENTS   LOADBALANCER       
+        k3s-default   1/1       0/0      true
+
+# para deletar cluster
+    k3d cluster delete <nome do cluster>
+
+# criar um cluster com 3 control plane e 3 agents (worker nodes)
+    k3d cluster create <nome> --servers 3 --agents 3
+        para criar um cluster com bind de porta
+            k3d cluster create <nome> --server 3 -- agents 3 -p "8080:30000@loadbalancer"
