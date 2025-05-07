@@ -35,3 +35,6 @@
     k3d cluster create <nome> --servers 3 --agents 3
         para criar um cluster com bind de porta
             k3d cluster create <nome> --server 3 -- agents 3 -p "8080:30000@loadbalancer"
+
+# para criar um recurso no cluster (deployments, job, pods e etc)
+    kubectl apply -f <nome/do/arquivo/yaml>
