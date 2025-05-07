@@ -39,6 +39,7 @@
 
 # replicaSet
     é um controlador que gerencia a quantidade de recursos como pods no cluster, garantindo a escalabilidade e a resiliencia dos pods no cluster
+    PS. nao faz atualização na aplicao ou imagem (só na infra), pra mudar uma versao da applicacao/imagem teriamos que usar o deployment
 
     * labels, marcação de recursos com chave e valor
     * selectors, selecionando objetos com base em labels
@@ -72,4 +73,6 @@
     * kubectl describe rs replicaset
         para descrever um ReplicaSet
 
+# kubectl apply -f replicaset.yaml && watch 'kubectl get rs,po'
+    para listar enquanto cria
     
