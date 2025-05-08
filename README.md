@@ -93,5 +93,3 @@ spec:
           ports:
             - containerPort: 80
 ```
-
-Esse README fornece um resumo dos conceitos essenciais para criar e gerenciar clusters Kubernetes com K3d. Caso queira ajustes ou mais detalhes, me avise! 🚀
