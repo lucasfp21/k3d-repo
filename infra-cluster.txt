@@ -76,3 +76,16 @@
 # kubectl apply -f replicaset.yaml && watch 'kubectl get rs,po'
     para listar enquanto cria
     
+# deployment, gerencia o replica set, geralmente pode ser utilizado a mesma estrutura do replicaset mudando somento o kind e os metadatas
+    ao alterar alguma coisa na aplicacao e realizar um novo kubectl apply o deployment cuida do rollout da atualização nos pods garantido que nao haja downtime
+
+    * rollouts
+        kubectl rollout history deploy <nome deployment>
+            para pegar os nomes dos deployment kubectl get deploy
+
+        REVISION  CHANGE-CAUSE
+        3         <none>
+        4         <none>
+
+    * kubectl rollout undo deploy <nome do deployment>
+        ele volta para versao anterior do deployment (nao altera as replicas [essas sao gerenciadas pelo replicaset])
