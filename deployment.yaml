@@ -1,30 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
+  name: meudeployment
 spec:
-  selector:
-    matchLabels:
-      app: myapp
-  template:
-    metadata:
-      labels:
-        app: myapp
-    spec:
-      containers:
-      - name: myapp
-        image: <Image>
-        resources:
-          limits:
-            memory: "128Mi"
-            cpu: "500m"
-        ports:
-        - containerPort: <Port>
-
-metadata:
-  name: meu-deployment
-spec:
-  replicas: 6
+  replicas: 4
   selector:
     matchLabels:
       app: web
@@ -35,8 +14,25 @@ spec:
     spec:
       containers:
         - name: web
-          image: kubedevio/web-color:green
+          image: kubedevio/web-color:blue
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webcolor
+spec:
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+      protocol: TCP
+      nodePort: 30000
+  type: NodePort
+
+

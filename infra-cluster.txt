@@ -89,3 +89,109 @@
 
     * kubectl rollout undo deploy <nome do deployment>
         ele volta para versao anterior do deployment (nao altera as replicas [essas sao gerenciadas pelo replicaset])
+
+# Se você altera manualmente a versão da imagem no arquivo YAML do Deployment (por exemplo, mudando kubedevio/web-color:blue para kubedevio/web-color:red) e aplica essa alteração com kubectl apply -f deployment.yaml, o Kubernetes já entende que precisa atualizar os pods.
+Nesse caso, ele faz um rolling update automaticamente, substituindo os pods gradualmente sem precisar de um rollout restart. O comando rollout restart é mais útil quando você quer forçar um restart sem mudar a configuração do Deployment, como no caso de uma nova versão da mesma imagem com a mesma tag.
+Se quiser verificar se a atualização está ocorrendo corretamente, você pode usar:
+kubectl rollout status deployment/meudeployment
+
+Se quiser verificar se a atualização está ocorrendo corretamente, você pode usar:
+kubectl rollout status deployment/meudeployment
+
+# services
+    é o servico do k8s que permite a comunicao entre os pods (expoe portas e ip dos recursos e faz o balanceamento interno de acesso entre os recursos listados nos services)
+
+    * cluster ip , só funciona internamente, fazendo as aplicacoes ou containeres se falarem entre si (internamente)
+
+        apiVersion: v1
+        kind: Service
+        metadata:
+        name: webcolor
+        spec:
+        selector:                   # nessa sessao defini-se o filtro do que vai ser utilizado nesse services
+            app: web                # nesse caso tudo que tenha o label app: web (ou seja os pods)
+        ports:
+        - port: 80                  # porta do container
+            targetPort: 80          # porta do pod
+            name: http
+            protocol: TCP
+        type: ClusterIP
+
+    * listar um service ou svc
+    kubectl get svc -o wide
+    NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+    kubernetes   ClusterIP   10.43.0.1     <none>        443/TCP   54m   <none>
+    webcolor     ClusterIP   10.43.37.47   <none>        80/TCP    36s   app=web
+
+# para criar um naked pod via linha de comando
+    kubectl run <nome do pod> -it --image <imagem> -- /bin/bash
+    kubectl run prompt -it --image ubuntu -- /bin/bash
+        de dentro do pod prompt instalamos o curl se nao tiver
+        e fazemos o curl htpp://<ip do pod> kubectl get po -o wide para pegar o ip (dessa forma acessamo direto)
+        ou podemos usar o nome do service para acessar da maneira correta
+            curl http://<nome do service>
+            curl http://webcolor
+
+
+# Service NodePort
+    expoe um serviço externamente mas ao inves de usarmos o nome do service para acessar temos que usar o ip de um dos nodes que fazem parte do cluster 
+        kubectl get nodes -o wide (para saber os ips dos nodes)
+    pode ser acessado externamente  
+    sempre utiliza portas entre 30000 e 32767
+
+        apiVersion: v1
+        kind: Service
+        metadata:
+        name: webcolor
+        spec:
+        selector:
+            app: web
+        ports:
+            - port: 80
+            targetPort: 80
+            name: http
+            protocol: TCP
+            nodePort: 30000         # porta do node (fixa)
+        type: NodePort
+
+        criar cluster com port bindo
+        k3d cluster create meucluster --servers 3 --agents 3  -p "30000:30000@loadbalancer"
+            sempre que espeficamos a porta na criacao do cluster k3d passamos @loadbalancer como ponto de referencia
+        rodar o kubectl apply -f deployment.yaml novamente
+        acessar via browser http://localhost:30000
+
+        a porta 30000 é usada so de fora do cluster
+        de dentro do cluster utilizamos a porta 80 (ou a que for espeficiada no manifest) e o nome do service
+            de dentro de um pod usamos curl http://webcolor:80
+
+# service loadbalancer
+    nesse caso ele cria um LB com um ip público para acessar os services de dentro do cluster atraves do ip público
+    esse tipo de recurso só é utilizado quando estamos usando kubernetes na cloud (alguem cloud provider)
+        para rodar o LB no onpremisse tem que usar o metaulb
+
+    external name:
+        basicamente cria um service que pode ser utlizado como um alias para um recurso de fora do seu cluster, por exemplo:
+            se voce tem um banco externo que é acessado pelos pods, voce pode criar um service do tipo external name e 
+            apontar nele o endereço do banco de dados, dessa forma voce chama o banco como se fosse um servico de dentro do cluster (como um alias)
+
+# service endpoint
+    basicamente quando criamos um service ele cria um endpoint (uma lista de ips que bate com a regra passado no selector do manifest de criação do service)
+    para listar os endpoints kubectl get endpoints
+
+    * endpoint slice:
+        basicamente criar um saida com arrays (melhor formatada) com os endpoints, dessa forma e mais facil gerenciar os endpoints em caso de se ter muitos
+        ele ficar armazendo por array, cada array armazena 100 endpoints
+
+# comandos uteis
+    pegar um manifest direto do cluster, um deployment por exemplo:
+        kubectl get deploy <nome deployment> -o yaml > deploymento.yaml
+    ver logs
+        kubectl logs <nome do pod>
+    executar um comando dentro do pod
+        kubectl exec <nome do pod> -- <comando>
+        kubectl exec  meudeployment-64f86fc94c-c85ch  -- ls
+    para logar em pod
+        kubectl exec -it <nome do pod> -- /bin/bash
+        kubectl exec -it meudeployment-64f86fc94c-c85ch  -- /bin/bash
+    para criar um pod "solto" via linha de comando 
+        kubectl run <nome do pod> --rm --image <imagem> -it -- /bin/bash
