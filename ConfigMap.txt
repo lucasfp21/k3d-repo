@@ -1,0 +1,87 @@
+# Coleção de elementos, chave -> valor, nao é usado para dados sensiveis
+    kubectl get configmap
+        para listar os configmap do cluster
+    kubectl describe configmap <nome configmap>
+        para listar o configmap
+    kubectl delete configmap <nome configmap>
+        para deletar o configmap
+    kubectl apply -f configmap.yaml
+
+# Criando com linha de comando
+    kubectl create configmap <nome configmap> --from-literal=<chave>="<valor>"
+        pode ter varios parametros --from-literal
+        cada um é um entrada no arquivo configmap
+        o parametro --from-file é usado para receber entrada de um arquivo (usa o nome do file como chave e o conteudo como valor)
+            kubectl create configmap app-conf --from-file <nomedofile.txt>
+                pode ser combinado com --from-literal
+
+# Criar via manifest
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+    name: app-config
+    data:
+    APP_NAME: "Aplicacao com configmap"
+    APP_AUTHOR: "Luqera"
+    APP_VERSION: "555"
+
+# Referenciar o configmap no deployment
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+    name: app-conf
+    spec:
+    replicas: 1
+    selector:
+        matchLabels:
+        app: app-conf
+    template:
+        metadata:
+        labels:
+            app: app-conf
+        spec:
+        containers:
+            - name: app-conf
+            image: kubedevio/app-variaveis-ambiente:v1
+            ports:
+                - containerPort: 30000
+            envFrom:
+                - configMapRef:
+                    name: app-config
+
+# passor por valor, caso o nome da minha env esteja diferente do nome do configmap
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+    name: app-config
+    data:
+    APP_NAME_CONFIG: "Aplicacao com configmap valor"
+    APP_AUTHOR: "Luqera"
+    APP_VERSION: "555"
+---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+    name: app-conf
+    spec:
+    replicas: 1
+    selector:
+        matchLabels:
+        app: app-conf
+    template:
+        metadata:
+        labels:
+            app: app-conf
+        spec:
+        containers:
+            - name: app-conf
+            image: kubedevio/app-variaveis-ambiente:v1
+            ports:
+                - containerPort: 30000
+            env:
+                - name: APP_NAME
+                  valueFrom:
+                    - configMapRef:
+                      name: app-config
+                      key: APP_NAME_CONFIG
