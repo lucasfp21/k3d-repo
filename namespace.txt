@@ -1,0 +1,21 @@
+# Namespace é uma orgarnização logica que é criada no k8s para orgarnização dos recurso/objetos
+
+    * criação via linha de comando
+        kubectl create namespace <nome namespace>
+
+    * criação via manifest
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: producao
+
+    * listar namespaces
+        kubectl get ns
+    * listar recursos de um namespace especifico
+        kubectl get all -n <nome namespace>
+
+    * aplicar um manifest e um namespace especifico
+        kubectl apply -f <nome manifest>.<yaml> -n <nome namespace
+
+    * especificar um namespace no deployment

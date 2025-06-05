@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: meudeployment
+  name: web
+  namespace: producao
 spec:
   replicas: 4
   selector:
@@ -23,7 +24,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: webcolor
+  name: web
+  namespace: producao
 spec:
   selector:
     app: web
