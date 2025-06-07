@@ -19,3 +19,28 @@ metadata:
         kubectl apply -f <nome manifest>.<yaml> -n <nome namespace
 
     * especificar um namespace no deployment
+
+    * deletar o namespace
+        isso delete todos os recursos dentro desse namespace
+
+        kubectl delete namespace <nome namespace>
+
+# comunicação entre pods em diferentes namespace
+	geralmente apontamos de dentro do nosso pod (origem) o caminho completo do service de do pod destino
+	exemplo curl de dentro de um pod qualquer no namespace default para o pod web no namespace produção
+		curl http://<service>.<namespace>.svc.cluster.local
+		curl http://web.producao.svc.cluster.local
+
+    se aplicarmos um service do tipo external name no nosso namespace de origem apontando para um service em outro namespace
+    nao vamos precisar passar o nome completo na chamada
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ExternalName
+  externalName: web.producao.svc.cluster.local
+
+    ao aplicar esse service podemos resolver passando somento
+        curl http://web
