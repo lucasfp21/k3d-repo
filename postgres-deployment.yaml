@@ -34,4 +34,3 @@ spec:
           hostPath:
             path: /k3d/images
             type: Directory
-            
