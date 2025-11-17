@@ -31,6 +31,5 @@ spec:
               name: db-vol
       volumes:
         - name: db-vol
-          hostPath:
-            path: /k3d/images
-            type: Directory
+          persistentVolumeClaim:
+                  claimName: db-pvc
