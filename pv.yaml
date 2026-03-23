@@ -11,6 +11,6 @@ spec:
   storageClassName: nfs-static-storage
   nfs:
     server: 172.18.0.10
-    path: /mnt/nfs_shared
+    path: /nfsshare
   mountOptions:
     - nfsvers=4.1
