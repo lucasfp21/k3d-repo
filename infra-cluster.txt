@@ -182,6 +182,172 @@ kubectl rollout status deployment/meudeployment
         basicamente criar um saida com arrays (melhor formatada) com os endpoints, dessa forma e mais facil gerenciar os endpoints em caso de se ter muitos
         ele ficar armazendo por array, cada array armazena 100 endpoints
 
+# persistent volume (pv)
+    representa o armazenamento físico dentro do cluster (como se fosse um "hd")
+    nao pertence diretamente a um pod, fica disponivel para uso no cluster
+
+    * pode ser de varios tipos:
+        - disco local (hostPath)
+        - nfs
+        - cloud (aws, azure, etc)
+
+    * principais campos:
+        capacity:
+            define o tamanho do volume (ex: 1Gi)
+        accessModes:
+            ReadWriteOnce (RWO)  -> leitura/escrita por um pod
+            ReadOnlyMany (ROX)   -> varios pods apenas leitura
+            ReadWriteMany (RWX)  -> varios pods leitura/escrita
+        storageClassName:
+            define a classe de armazenamento (usado em provisionamento dinamico)
+
+    * exemplo:
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+            name: meu-pv
+        spec:
+            capacity:
+                storage: 1Gi
+            accessModes:
+                - ReadWriteOnce
+            hostPath:
+                path: /mnt/data
+
+# persistent volume claim (pvc)
+    é uma requisicao de armazenamento feita pelo pod
+    o pvc nao cria armazenamento, ele solicita um pv compativel
+
+    * o kubernetes faz o bind automaticamente entre pvc e pv
+
+    * principais campos:
+        accessModes:
+            deve ser compativel com o pv
+        resources:
+            requests:
+                storage: tamanho solicitado
+
+    * exemplo:
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+            name: meu-pvc
+        spec:
+            accessModes:
+                - ReadWriteOnce
+            resources:
+                requests:
+                    storage: 1Gi
+
+# fluxo pv + pvc
+    1. cria um pv (ou usa storageClass para criacao automatica)
+    2. cria um pvc solicitando armazenamento
+    3. kubernetes faz o bind (ligacao) entre pvc e pv
+    4. o pod utiliza o pvc (nunca o pv diretamente)
+
+# usando pvc em um pod
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: meu-pod
+    spec:
+        containers:
+            - name: app
+            image: nginx
+            volumeMounts:
+                - name: meu-volume
+                mountPath: /app/data
+        volumes:
+            - name: meu-volume
+            persistentVolumeClaim:
+                claimName: meu-pvc
+
+# observacoes importantes
+    * o ciclo de vida do pv é independente do pod
+        deletar o pod nao remove os dados
+
+    * o pvc é a forma correta de consumir armazenamento no k8s
+
+    * geralmente em cloud usamos storageClass para provisionamento dinamico (nao precisa criar pv manualmente)
+
+# diferenca entre storage class, hostpath e nfs
+    sao formas diferentes de gerenciar armazenamento no kubernetes
+
+    # hostpath
+        é um tipo de armazenamento local (do proprio node)
+
+        * funciona pegando um diretorio do node e montando dentro do pod
+        * nao é recomendado para producao (baixa disponibilidade)
+
+        * caracteristicas:
+            - dados ficam presos ao node
+            - se o pod for movido para outro node, perde acesso aos dados
+            - simples de usar (bom para testes e estudos)
+
+        * exemplo:
+            hostPath:
+                path: /mnt/data
+
+    # nfs (network file system)
+        é um armazenamento em rede compartilhado entre varios nodes
+
+        * permite que varios pods em nodes diferentes acessem os mesmos dados
+
+        * caracteristicas:
+            - suporta ReadWriteMany (RWX)
+            - dados persistem independente do node
+            - depende de um servidor nfs externo
+
+        * exemplo:
+            nfs:
+                path: /data
+                server: 192.168.0.10
+
+    # storage class
+        é um recurso que permite criar volumes automaticamente (provisionamento dinamico)
+
+        * ao inves de criar PV manualmente, o kubernetes cria sob demanda
+
+        * usado principalmente em cloud:
+            - aws (EBS)
+            - azure disk
+            - google persistent disk
+
+        * fluxo:
+            1. cria uma storageClass
+            2. pvc referencia a storageClass
+            3. pv é criado automaticamente
+
+        * caracteristicas:
+            - automatiza criacao de volumes
+            - define tipo de storage (ssd, hdd, etc)
+            - facilita escalabilidade
+
+        * exemplo:
+            apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+                name: standard
+            provisioner: kubernetes.io/aws-ebs
+
+    # Resumindo
+        hostPath:
+            armazenamento local (1 node)
+            simples, nao recomendado em producao
+
+        nfs:
+            armazenamento compartilhado em rede
+            suporta varios pods ao mesmo tempo
+
+        storageClass:
+            automatiza criacao de volumes (pv)
+            usado com pvc (provisionamento dinamico)
+
+        dica pratica (importante)
+            * hostPath -> usar apenas para testes
+            * nfs -> bom para ambiente on-premise
+            * storageClass -> padrao em cloud (producao)
+
 # comandos uteis
     pegar um manifest direto do cluster, um deployment por exemplo:
         kubectl get deploy <nome deployment> -o yaml > deploymento.yaml
