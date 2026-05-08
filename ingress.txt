@@ -1,0 +1,3 @@
+ingress é basicamente um proxy reverso (mapeia suas aplicações e gerencia os acessos externos a essas aplicações)
+    voce tem cluster com muitas aplicações (e services com portas) e nao quer gerenciar uma por uma, aqui o ingresse facilita, pois podemos criar regras de gerenciamento e acessos
+    
