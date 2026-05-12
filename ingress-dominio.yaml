@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myingress-default
+  annotation:
+    nginx.ingress.kubernets.io/rewrite-taget: /  
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: color.127.0.0.1.nip.io
+      http:
+        paths:
+        - pathType: Prefix
+          path: "/<app1>"
+          backend:
+            service:
+              name: <Service 1>
+              port: 
+                number: <Port 1>
+        - pathType: Prefix
+          path: "/<app2>"
+          backend:
+            service:
+              name: <Service 2>
+              port: 
+                number: <Port 2>

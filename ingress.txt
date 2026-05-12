@@ -58,3 +58,69 @@ exemplo ingress:
     todo ingress tem que estar vinculado a um ingress-controller, por isso adicionamos a linha ingressClassName no yaml
         para saber o nome do ingress
             kubectl get ingressclass
+
+ingress por path:
+    quando eu tenho varias applicacoes e consequentemente varios servicos e cada um com a sua porta
+    dessa forma preciso passar um path pra cada servido e porta a ser gerenciado pelo ingress controller
+
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+        name: myingress-path
+        annotation:
+            nginx.ingress.kubernets.io/rewrite-taget: /
+        spec:
+        ingressClassName: <nome do ingress>
+        rules:
+            - http:
+                paths:
+                - pathType: Prefix
+                path: "/<app1>"
+                backend:
+                    service:
+                    name: <Service 1>
+                    port: 
+                        number: <Port 1>
+                - pathType: Prefix
+                path: "/<app2>"
+                backend:
+                    service:
+                    name: <Service 2>
+                    port: 
+                        number: <Port 2>
+
+    principais diferencas entre o ingress simples e o path:
+        temos que adicionar uma annotation pra que ingress reescreva o path da requisição pra bater com a aplicacao
+            name: myingress-path
+            annotation:
+                nginx.ingress.kubernets.io/rewrite-taget: /
+
+    podemos criar varios paths embaixo de rules:
+        rules:
+            - http:
+                paths:
+                - pathType: Prefix
+                path: "/<app1>"
+                backend:
+                    service:
+                    name: <Service 1>
+                    port: 
+                        number: <Port 1>
+                - pathType: Prefix
+                path: "/<app2>"
+                backend:
+                    service:
+                    name: <Service 2>
+                    port: 
+                        number: <Port 2>
+
+        os pathType basicamente funcionam como relativo e absoluto
+            se tiver Prefix ele entende que tudo que tiver apos o path nao vai atrapalhar a requisicao
+            se tiver Exact o caminho da requisicao tem que ser exatamente como no path do ingress
+
+O ingress defaul backend seta um serviço padrao pra ser direcionado caso nenhuma regra se aplique
+  defaultBackend:
+    service:
+      name: nginx
+      port:
+        number: 80
