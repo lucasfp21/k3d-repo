@@ -1,3 +1,60 @@
 ingress é basicamente um proxy reverso (mapeia suas aplicações e gerencia os acessos externos a essas aplicações)
     voce tem cluster com muitas aplicações (e services com portas) e nao quer gerenciar uma por uma, aqui o ingresse facilita, pois podemos criar regras de gerenciamento e acessos
-    
+
+nesse exemplo usamos o kind
+
+kind-config.yaml
+
+    kind: Cluster
+    apiVersion: kind.x-k8s.io/v1alpha4
+    nodes:
+    - role: control-plane
+    extraPortMappings:
+    - containerPort: 30000
+        hostPort: 80
+        listenAddress: "0.0.0.0"
+        protocol: TCP
+    - role: control-plane
+    - role: control-plane
+    - role: worker
+    - role: worker
+    - role: worker
+
+    kind cluster create meu-cluster --config kind-config.yaml
+
+Usamos o nginx ingress controller
+    https://kubernetes.github.io/ingress-nginx/
+
+    baremetal
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.15.1/deploy/static/provider/baremetal/deploy.yaml
+            fizemos o juste adicionando o nodePort: 30000 no service do ingress-controller para ficar igual nosso cluster
+
+Como estamos localmente, se quisermos usar dominio vamos precisar editar o arquivo host da maquina e adicionar no final
+127.0.0.1   <dominio>
+
+o nip.io é uma alternativa a alteração no arquivo host
+    127.0.0.1.nip.io
+
+
+exemplo ingress:
+
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+    name: ingress-simples
+    spec:
+    ingressClassName: nginx
+    rules:
+        - http:
+            paths:
+            - pathType: Prefix
+            path: "/"
+            backend:
+                service:
+                name: <Service>
+                port: 
+                    number: <Port>
+
+    todo ingress tem que estar vinculado a um ingress-controller, por isso adicionamos a linha ingressClassName no yaml
+        para saber o nome do ingress
+            kubectl get ingressclass
