@@ -13,3 +13,117 @@ usuario (comando kubectl) -> Api-Server
                                             kubelet
                                                     ->
                                                         Container-Runtime
+
+No geral, um pod fica Pending quando ele foi criado com sucesso, mas ainda não conseguiu ser colocado para rodar em um node.
+
+Ou seja:
+
+Pending = scheduler ainda não conseguiu executar o pod
+
+Os motivos mais comuns são:
+
+falta de CPU/memória
+quota excedida
+regras de scheduling incompatíveis
+volume/PVC não disponível
+imagem demorando pra baixar
+node indisponível
+
+Fluxo simplificado:
+
+kubectl apply
+→ pod criado
+→ scheduler tenta encontrar node
+→ falha
+→ pod fica Pending
+
+Pending muitas vezes significa:
+
+"os requisitos do pod não puderam ser atendidos"
+
+Exemplos:
+
+Requisito	Resultado
+precisa de 2 CPUs	cluster não tem
+precisa de 4Gi RAM	nenhum node suporta
+precisa rodar em node com label específica	não encontrou
+precisa de volume	storage não disponível
+quota excedida	scheduler bloqueia
+
+Então o scheduler fica tentando:
+
+"existe algum node que satisfaz tudo isso?"
+
+Se a resposta for não:
+Pending.
+
+Por isso Pending é MUITO associado a:
+
+capacidade
+constraints
+scheduling
+requisitos do workload.
+
+---
+
+Linux Signal	Comando equivalente	Comportamento
+SIGTERM	kill	pede encerramento “educado”
+SIGKILL	kill -9	mata imediatamente
+ SIGTERM
+"encerre graciosamente"
+
+O processo:
+
+recebe aviso
+pode salvar estado
+fechar conexões
+finalizar cleanup.
+
+No Kubernetes:
+
+é o sinal enviado primeiro quando um pod vai morrer.
+ SIGKILL
+"acabou, morre agora"
+
+O processo:
+
+não consegue interceptar
+não faz cleanup
+kernel mata direto.
+
+Fluxo real no Kubernetes
+
+Quando um pod é deletado:
+
+1.
+
+Kubernetes envia:
+
+SIGTERM
+2.
+
+Espera o:
+
+terminationGracePeriodSeconds
+
+(default 30s)
+
+3.
+
+Se o processo NÃO sair:
+
+Kubernetes envia:
+
+SIGKILL 
+OOMKilled
+Em muitos casos o kernel usa algo equivalente a:
+
+SIGKILL
+porque precisa liberar memória imediatamente.
+
+Por isso containers OOM normalmente:
+
+morrem abruptamente
+sem cleanup.
+
+
