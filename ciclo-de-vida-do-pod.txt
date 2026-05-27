@@ -1,0 +1,15 @@
+ciclo de vida do pod
+
+usuario (comando kubectl) -> Api-Server 
+                                        -> 
+                                            Scheduler
+                                         <- 
+                             Api-Server 
+                                        -> 
+                                            etcd
+                                        <-
+                            Api-Server
+                                        ->
+                                            kubelet
+                                                    ->
+                                                        Container-Runtime
