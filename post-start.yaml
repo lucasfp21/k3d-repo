@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginxx
+        image: blueapple/nginx-curl:latest # imagem oficial do nginx nao vem com curl
+        ports:
+        - containerPort: 80
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "curl -X POST https://webhook.site/a8c5f519-918b-43a8-a372-aa68960f9ba3 -d 'post start exec'"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "curl -X POST https://webhook.site/a8c5f519-918b-43a8-a372-aa68960f9ba3 -d 'post start exec'"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30000
+  type: LoadBalancer

@@ -126,4 +126,8 @@ Por isso containers OOM normalmente:
 morrem abruptamente
 sem cleanup.
 
+post start:
+    eventos que sao configurados assim que o inicia (ou enquanto ele inicia)
 
+pre stop:
+    eventos que sao configurados quando um pode entra em estado terminal
