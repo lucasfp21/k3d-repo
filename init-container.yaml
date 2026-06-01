@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      initContainers:
+      - name: start
+        image: fabricioveronez/ubuntu-curl:v1
+        command: ["sh", "-c", "curl http://web-color -o /app/index.html"]
+        volumeMounts:
+          - mountPath: /app
+            name: nginx-vol
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - mountPath: /usr/share/nginx/html
+            name: nginx-vol
+      volumes:
+        - name: nginx-vol
+          emptyDir:
+            sizeLimit: 30Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30000
+  type: LoadBalancer

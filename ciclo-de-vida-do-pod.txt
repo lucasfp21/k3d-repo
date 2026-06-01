@@ -131,3 +131,7 @@ post start:
 
 pre stop:
     eventos que sao configurados quando um pode entra em estado terminal
+
+init container:
+    uma sequencia de eventos/comandos que pode ser passado em tempo de incializacao do pod para serem executados
+    
