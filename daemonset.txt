@@ -1,0 +1,4 @@
+é uma outra forma de deploy no k8s, a principal diferença entre daemonset e o deployment é que o daemonset garante que vai ter um pod rodando em cada node do cluster
+enquanto o deployment faz esse agendamento de forma "randomica"
+    o daemonset é muito usado em monitamento e coleta de informações do proprio cluster
+    e ferramentas de manutençao do cluster 
