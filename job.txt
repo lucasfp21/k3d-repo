@@ -1,0 +1,53 @@
+Um processo (Pod) que é executado pode ser, por exemplo, um webscraping de algum site, uma transformação de dados ou até mesmo um Pod para consumir uma fila de mensageria. Após consumir todas as mensagens, o Pod encerra.
+
+Basicamente, o Pod sobe, executa a ação e encerra. Esse comportamento é orquestrado por um Job, que garante que a execução ocorra até atingir o resultado esperado.
+
+🔄 Por padrão, um Job cria 1 Pod e espera que ele finalize com sucesso (restartPolicy: Never).
+
+✅ Se o Pod terminar com status Completed, o Job é marcado como Complete.
+
+❌ Se o Pod falhar, o Job recria outro Pod até atingir o número máximo de tentativas definido por backoffLimit (o valor padrão é 6).
+
+📊 O campo completions define quantas execuções bem-sucedidas são necessárias para considerar o Job concluído (default = 1).
+
+⚡ O campo parallelism controla quantos Pods podem rodar em paralelo.
+
+⏱️ Além disso, é possível configurar ttlSecondsAfterFinished para que os recursos do Job sejam automaticamente limpos após um tempo.
+
+Assim, o Job não fica rodando indefinidamente: ele tenta até o limite configurado e encerra quando atinge o número de execuções bem-sucedidas ou falha após exceder o limite de tentativas.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sorteador
+spec:
+  completions: 3          # precisa de 3 execuções bem-sucedidas
+  parallelism: 2          # até 2 pods rodando em paralelo
+  backoffLimit: 4         # máximo de 4 tentativas em caso de falha
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      labels:
+        app: sorteador
+    spec:
+      containers:
+      - name: sorteador
+        image: fabricioveronez/sorteador:v1
+        env:
+          - name: NUM_ESCOLHIDO
+            value: "2"
+          - name: NUM_MAXIMO
+            value: "4"
+          - name: DELAY_SORTEIO
+            value: "10"
+      restartPolicy: Never
+O que acontece aqui:
+🔁 completions: 3 → o Job só será considerado completo quando 3 pods terminarem com sucesso.
+
+⚡ parallelism: 2 → até 2 pods podem rodar ao mesmo tempo, acelerando a execução.
+
+❌ backoffLimit: 4 → se algum pod falhar, o Job tenta novamente até 4 vezes antes de desistir.
+
+🧹 ttlSecondsAfterFinished: 60 → os recursos do Job serão limpos automaticamente 60 segundos após a conclusão.
+
+Assim você controla tanto quantas vezes o Job precisa rodar com sucesso, quanto quantos pods podem rodar em paralelo, e ainda define quantas tentativas de reexecução são permitidas em caso de erro.
