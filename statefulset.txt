@@ -1,0 +1,45 @@
+### 📌 StatefulSet no Kubernetes
+Um **StatefulSet** é um recurso usado para gerenciar **aplicações com estado** dentro de um cluster Kubernetes. Diferente de um Deployment, que trata Pods como instâncias idênticas e descartáveis, o StatefulSet garante **identidade estável** e **ordem de criação/remoção** dos Pods.
+
+### 🔑 Características principais
+- **Identidade persistente**: cada Pod recebe um nome fixo e previsível (`nome-0`, `nome-1`, etc.).
+- **Volumes persistentes**: normalmente usados com **PersistentVolumeClaims (PVCs)**, garantindo que cada Pod mantenha seus dados mesmo após reinicializações.
+- **Ordem controlada**:
+  - Criação: Pods são iniciados em ordem (`0`, depois `1`, etc.).
+  - Exclusão: Pods são removidos na ordem inversa.
+- **Escalabilidade com estado**: ao aumentar ou reduzir réplicas, os Pods mantêm sua identidade e dados associados.
+- **Uso típico**: bancos de dados (MySQL, PostgreSQL, MongoDB), sistemas de mensageria (Kafka, RabbitMQ), ou qualquer aplicação que precise de armazenamento persistente e identidade estável.
+
+### 📝 Exemplo simples de StatefulSet
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: banco-dados
+spec:
+  serviceName: "banco-dados"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: banco-dados
+  template:
+    metadata:
+      labels:
+        app: banco-dados
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: dados
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: dados
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
