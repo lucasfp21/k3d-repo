@@ -1,0 +1,57 @@
+apiVersion: apps/v1              # Versão da API usada para StatefulSet
+kind: StatefulSet                # Tipo de recurso: StatefulSet
+metadata:
+  name: nginx                    # Nome do StatefulSet
+spec:
+  persistentVolumeClaimRetentionPolicy:   # Política de retenção dos PVCs
+    whenScaled: Delete           # Ao reduzir réplicas, PVCs são deletados
+    whenDelete: Retain           # Ao deletar o StatefulSet, PVCs são mantidos
+  serviceName: nginx             # Nome do Service headless associado
+  selector:
+    matchLabels:
+      app: nginx-state           # Selector: identifica Pods com essa label
+  replicas: 5                    # Número de réplicas (Pods)
+  template:                      # Template para criar os Pods
+    metadata:
+      labels:
+        app: nginx-state         # Label aplicada nos Pods
+    spec:
+      initContainers:            # InitContainer executado antes do container principal
+        - name: volume-page
+          image: busybox         # Imagem leve para tarefas simples
+          command: ['sh','-c','echo $(hostname) > /app/index.html']
+          # Comando grava o hostname do Pod em index.html
+          volumeMounts:
+            - mountPath: /app    # Monta o volume em /app
+              name: www          # Nome do volume
+      containers:                # Container principal
+        - name: nginx
+          image: nginx           # Imagem do servidor Nginx
+          ports:
+            - containerPort: 80  # Porta exposta pelo container
+              name: web
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html  # Monta volume no diretório padrão do Nginx
+              name: www
+
+  volumeClaimTemplates:          # Template para criar PVCs automaticamente
+    - metadata:
+        name: www                # Nome do PVC
+      spec:
+        accessModes: ["ReadWriteOnce"]   # Modo de acesso: leitura/escrita por um nó
+        storageClassName: "local-path"   # Classe de armazenamento usada
+        resources:
+          requests:
+            storage: 1Gi         # Tamanho do volume solicitado
+---
+apiVersion: v1                   # Versão da API para Service
+kind: Service                     # Tipo de recurso: Service
+metadata:
+  name: nginx                     # Nome do Service
+spec:
+  selector:
+    app: nginx-state              # Selector: conecta Pods com essa label
+  clusterIP: None                 # Service headless (sem IP fixo, gera DNS por Pod)
+  ports:
+    - port: 80                    # Porta exposta pelo Service
+      targetPort: 80              # Porta alvo nos Pods
