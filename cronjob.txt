@@ -1,0 +1,100 @@
+📌 CronJob no Kubernetes
+Um CronJob é um recurso que permite agendar a execução de Jobs em horários ou intervalos específicos, semelhante ao cron do Linux.
+
+🔄 Baseado em Job: cada execução do CronJob cria um Job, que por sua vez gera Pods para realizar a tarefa.
+
+⏱️ Agendamento: definido pelo campo schedule usando sintaxe cron ("*/5 * * * *" → a cada 5 minutos).
+
+📊 Controle de execuções:
+
+concurrencyPolicy: define como lidar com execuções simultâneas (Allow, Forbid, Replace).
+
+successfulJobsHistoryLimit: quantos Jobs bem-sucedidos manter no histórico.
+
+failedJobsHistoryLimit: quantos Jobs com falha manter no histórico.
+
+🧹 Limpeza automática: pode usar ttlSecondsAfterFinished para remover Jobs após certo tempo.
+
+Exemplo de CronJob
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sorteador-cron
+spec:
+  schedule: "0 9 * * *"   # todo dia às 9h
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+          - name: sorteador
+            image: fabricioveronez/sorteador:v1
+            env:
+              - name: NUM_ESCOLHIDO
+                value: "2"
+              - name: NUM_MAXIMO
+                value: "4"
+              - name: DELAY_SORTEIO
+                value: "10"
+          restartPolicy: Never
+
+
+✅ Resumindo
+Job → executa uma vez e termina.
+
+CronJob → agenda Jobs para rodarem periodicamente.
+
+Ideal para tarefas recorrentes como backup, coleta de métricas, limpeza de dados ou processamento batch.
+
+Campos úteis no spec de CronJob
+concurrencyPolicy  
+Define como o CronJob lida quando uma nova execução está agendada mas a anterior ainda não terminou:
+
+Allow → permite múltiplas execuções simultâneas (default).
+
+Forbid → não inicia uma nova execução se a anterior ainda estiver rodando.
+
+Replace → encerra a execução anterior e inicia a nova.
+
+successfulJobsHistoryLimit  
+Número de Jobs bem-sucedidos que o CronJob mantém no histórico.
+
+Default: 3
+
+Exemplo: successfulJobsHistoryLimit: 5 → guarda os últimos 5 Jobs completos.
+
+failedJobsHistoryLimit  
+Número de Jobs com falha que o CronJob mantém no histórico.
+
+Default: 1
+
+Exemplo: failedJobsHistoryLimit: 2 → guarda os últimos 2 Jobs que falharam.
+
+📝 Exemplo completo de CronJob com esses campos
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sorteador-cron
+spec:
+  schedule: "*/5 * * * *"        # a cada 5 minutos
+  concurrencyPolicy: Forbid      # não roda se o anterior ainda estiver em execução
+  successfulJobsHistoryLimit: 5  # mantém histórico de 5 execuções bem-sucedidas
+  failedJobsHistoryLimit: 2      # mantém histórico de 2 falhas
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+          - name: sorteador
+            image: fabricioveronez/sorteador:v1
+            env:
+              - name: NUM_ESCOLHIDO
+                value: "2"
+              - name: NUM_MAXIMO
+                value: "4"
+              - name: DELAY_SORTEIO
+                value: "10"
+          restartPolicy: Never
